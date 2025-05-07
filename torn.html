@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BracketMaster - Tournament Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    input[type="number"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 80px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .team-list, .bracket {
+      margin-top: 20px;
+    }
+    .team-item {
+      background: #f9f9f9;
+      padding: 8px 12px;
+      margin: 4px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .round {
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 20px;
+    }
+    .match {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      text-align: center;
+      padding: 10px;
+    }
+    .match.winner {
+      background-color: #d0f0d0;
+      font-weight: bold;
+    }
+    .champion {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BracketMaster</h1>
+    <div class="controls">
+      <input type="number" id="teamCount" min="2" max="64" value="8" />
+      <button onclick="generateTeams()">Generate</button>
+      <button onclick="startTournament()">Start</button>
+    </div>
+    <div id="teamContainer" class="team-list"></div>
+    <div id="bracketContainer" class="bracket"></div>
+    <div id="champion" class="champion" style="display:none"></div>
+  </div>
+
+  <script>
+    let teams = [];
+    let brackets = [];
+
+    function generateTeams() {
+      const count = parseInt(document.getElementById('teamCount').value);
+      teams = [];
+      for (let i = 1; i <= count; i++) {
+        teams.push(`Team ${i}`);
+      }
+      const container = document.getElementById('teamContainer');
+      container.innerHTML = '<strong>Teams:</strong>';
+      teams.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'team-item';
+        div.textContent = t;
+        container.appendChild(div);
+      });
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function startTournament() {
+      shuffle(teams);
+      const rounds = Math.ceil(Math.log2(teams.length));
+      const totalSlots = Math.pow(2, rounds);
+      while (teams.length < totalSlots) teams.push('BYE');
+
+      brackets = [[...teams]];
+      for (let r = 1; r <= rounds; r++) {
+        brackets[r] = new Array(brackets[r - 1].length / 2).fill(null);
+      }
+      renderBracket();
+    }
+
+    function renderBracket() {
+      const container = document.getElementById('bracketContainer');
+      container.innerHTML = '';
+      brackets.forEach((round, rIdx) => {
+        const roundDiv = document.createElement('div');
+        roundDiv.className = 'round';
+        round.forEach((match, mIdx) => {
+          const div = document.createElement('div');
+          div.className = 'match';
+
+          let team1 = brackets[rIdx - 1]?.[mIdx * 2] ?? match;
+          let team2 = brackets[rIdx - 1]?.[mIdx * 2 + 1] ?? '';
+
+          div.textContent = `${team1} vs ${team2}`;
+          if (!brackets[rIdx][mIdx] && team1 !== 'BYE' && team2 !== 'BYE') {
+            div.onclick = () => {
+              const winner = Math.random() > 0.5 ? team1 : team2;
+              brackets[rIdx][mIdx] = winner;
+              if (rIdx === brackets.length - 1) {
+                document.getElementById('champion').style.display = 'block';
+                document.getElementById('champion').textContent = `Champion: ${winner}`;
+              }
+              renderBracket();
+            };
+          } else if (match) {
+            div.classList.add('winner');
+            div.textContent = match;
+          }
+          roundDiv.appendChild(div);
+        });
+        container.appendChild(roundDiv);
+      });
+    }
+  </script>
+</body>
+</html>
