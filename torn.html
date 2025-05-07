@@ -1,176 +1,314 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BracketMaster - Tournament Generator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 20px;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    input[type="number"] {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      width: 80px;
-    }
-    button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      background-color: #4CAF50;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .team-list, .bracket {
-      margin-top: 20px;
-    }
-    .team-item {
-      background: #f9f9f9;
-      padding: 8px 12px;
-      margin: 4px 0;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    .round {
-      display: inline-block;
-      vertical-align: top;
-      margin-right: 20px;
-    }
-    .match {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      text-align: center;
-      padding: 10px;
-    }
-    .match.winner {
-      background-color: #d0f0d0;
-      font-weight: bold;
-    }
-    .champion {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      color: #4CAF50;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Bracket Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .setup-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #teamsList {
+            margin-top: 20px;
+        }
+        .team-item {
+            background-color: #f9f9f9;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        #tournamentBracket {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+        .round {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            margin-right: 40px;
+        }
+        .round-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .match {
+            display: flex;
+            flex-direction: column;
+            margin: 10px 0;
+            width: 200px;
+        }
+        .team {
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+        }
+        .winner {
+            background-color: #e8f5e9;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+        .loser {
+            background-color: #ffebee;
+            border-color: #ffcdd2;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        #championDisplay {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            display: none;
+        }
+        #errorMessage {
+            color: #d32f2f;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>BracketMaster</h1>
-    <div class="controls">
-      <input type="number" id="teamCount" min="2" max="64" value="8" />
-      <button onclick="generateTeams()">Generate</button>
-      <button onclick="startTournament()">Start</button>
+    <h1>Tournament Bracket Generator</h1>
+
+    <div class="setup-container">
+        <div class="input-group">
+            <label for="numTeams">Number of Teams:</label>
+            <input type="number" id="numTeams" min="2" max="64" value="8">
+            <button id="generateButton">Generate Teams</button>
+        </div>
+
+        <div id="errorMessage"></div>
+
+        <div id="teamsList"></div>
+
+        <div class="input-group">
+            <button id="startTournamentButton" disabled>Start Tournament</button>
+        </div>
     </div>
-    <div id="teamContainer" class="team-list"></div>
-    <div id="bracketContainer" class="bracket"></div>
-    <div id="champion" class="champion" style="display:none"></div>
-  </div>
 
-  <script>
-    let teams = [];
-    let brackets = [];
+    <div class="bracket-container">
+        <div id="tournamentBracket"></div>
+        <div id="championDisplay"></div>
+    </div>
 
-    function generateTeams() {
-      const count = parseInt(document.getElementById('teamCount').value);
-      teams = [];
-      for (let i = 1; i <= count; i++) {
-        teams.push(`Team ${i}`);
-      }
-      const container = document.getElementById('teamContainer');
-      container.innerHTML = '<strong>Teams:</strong>';
-      teams.forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'team-item';
-        div.textContent = t;
-        container.appendChild(div);
-      });
-    }
+    <script>
+        let teams = [];
+        let brackets = [];
+        let roundsRequired = 0;
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    }
+        document.getElementById('generateButton').addEventListener('click', function () {
+            const numTeams = parseInt(document.getElementById('numTeams').value);
+            const errorMessage = document.getElementById('errorMessage');
 
-    function startTournament() {
-      shuffle(teams);
-      const rounds = Math.ceil(Math.log2(teams.length));
-      const totalSlots = Math.pow(2, rounds);
-      while (teams.length < totalSlots) teams.push('BYE');
+            if (isNaN(numTeams) || numTeams < 2) {
+                errorMessage.textContent = "Please enter a valid number of teams (minimum 2)";
+                errorMessage.style.display = "block";
+                return;
+            } else if (numTeams > 64) {
+                errorMessage.textContent = "Maximum 64 teams allowed";
+                errorMessage.style.display = "block";
+                return;
+            }
 
-      brackets = [[...teams]];
-      for (let r = 1; r <= rounds; r++) {
-        brackets[r] = new Array(brackets[r - 1].length / 2).fill(null);
-      }
-      renderBracket();
-    }
+            errorMessage.style.display = "none";
+            teams = [];
+            for (let i = 1; i <= numTeams; i++) {
+                teams.push(`Team ${i}`);
+            }
 
-    function renderBracket() {
-      const container = document.getElementById('bracketContainer');
-      container.innerHTML = '';
-      brackets.forEach((round, rIdx) => {
-        const roundDiv = document.createElement('div');
-        roundDiv.className = 'round';
-        round.forEach((match, mIdx) => {
-          const div = document.createElement('div');
-          div.className = 'match';
-
-          let team1 = brackets[rIdx - 1]?.[mIdx * 2] ?? match;
-          let team2 = brackets[rIdx - 1]?.[mIdx * 2 + 1] ?? '';
-
-          div.textContent = `${team1} vs ${team2}`;
-          if (!brackets[rIdx][mIdx] && team1 !== 'BYE' && team2 !== 'BYE') {
-            div.onclick = () => {
-              const winner = Math.random() > 0.5 ? team1 : team2;
-              brackets[rIdx][mIdx] = winner;
-              if (rIdx === brackets.length - 1) {
-                document.getElementById('champion').style.display = 'block';
-                document.getElementById('champion').textContent = `Champion: ${winner}`;
-              }
-              renderBracket();
-            };
-          } else if (match) {
-            div.classList.add('winner');
-            div.textContent = match;
-          }
-          roundDiv.appendChild(div);
+            displayTeams();
+            document.getElementById('startTournamentButton').disabled = false;
         });
-        container.appendChild(roundDiv);
-      });
-    }
-  </script>
+
+        function displayTeams() {
+            const teamsListElement = document.getElementById('teamsList');
+            teamsListElement.innerHTML = '<h3>Teams:</h3>';
+
+            const list = document.createElement('div');
+            teams.forEach(team => {
+                const item = document.createElement('div');
+                item.className = 'team-item';
+                item.textContent = team;
+                list.appendChild(item);
+            });
+
+            teamsListElement.appendChild(list);
+        }
+
+        document.getElementById('startTournamentButton').addEventListener('click', function () {
+            shuffleArray(teams);
+            roundsRequired = Math.ceil(Math.log2(teams.length));
+            generateBracket();
+        });
+
+        function generateBracket() {
+            const bracketElement = document.getElementById('tournamentBracket');
+            bracketElement.innerHTML = '';
+            brackets = [];
+
+            const perfectBracketSize = Math.pow(2, roundsRequired);
+            const numByes = perfectBracketSize - teams.length;
+            let firstRoundMatches = [];
+
+            if (numByes === 0) {
+                for (let i = 0; i < teams.length; i += 2) {
+                    firstRoundMatches.push({ team1: teams[i], team2: teams[i + 1], winner: null });
+                }
+            } else {
+                let advanced = teams.slice(0, numByes);
+                let playing = teams.slice(numByes);
+                for (let i = 0; i < playing.length; i += 2) {
+                    firstRoundMatches.push({ team1: playing[i], team2: playing[i + 1], winner: null });
+                }
+                let secondRoundMatches = [];
+                for (let i = 0; i < advanced.length; i += 2) {
+                    secondRoundMatches.push({ team1: advanced[i], team2: advanced[i + 1] || null, winner: null });
+                }
+                for (let i = 0; i < firstRoundMatches.length / 2; i++) {
+                    secondRoundMatches.push({ team1: null, team2: null, winner: null });
+                }
+                brackets.push(secondRoundMatches);
+            }
+            brackets.unshift(firstRoundMatches);
+
+            for (let i = 1; i < roundsRequired; i++) {
+                if (!brackets[i]) {
+                    let prev = brackets[i - 1].length;
+                    let roundMatches = [];
+                    for (let j = 0; j < prev / 2; j++) {
+                        roundMatches.push({ team1: null, team2: null, winner: null });
+                    }
+                    brackets.push(roundMatches);
+                }
+            }
+            renderBracket();
+        }
+
+        function renderBracket() {
+            const bracketElement = document.getElementById('tournamentBracket');
+            bracketElement.innerHTML = '';
+
+            brackets.forEach((round, roundIndex) => {
+                const roundElement = document.createElement('div');
+                roundElement.className = 'round';
+
+                const roundTitle = document.createElement('div');
+                roundTitle.className = 'round-title';
+                roundTitle.textContent = roundIndex === 0 ? 'First Round' : (roundIndex === brackets.length - 1 ? 'Final' : `Round ${roundIndex + 1}`);
+                roundElement.appendChild(roundTitle);
+
+                round.forEach((match, matchIndex) => {
+                    const matchElement = document.createElement('div');
+                    matchElement.className = 'match';
+
+                    const team1Element = document.createElement('div');
+                    team1Element.className = 'team';
+                    team1Element.textContent = match.team1 || 'TBD';
+
+                    const team2Element = document.createElement('div');
+                    team2Element.className = 'team';
+                    team2Element.textContent = match.team2 || 'TBD';
+
+                    if (match.winner === match.team1) team1Element.classList.add('winner');
+                    if (match.winner === match.team2) team2Element.classList.add('winner');
+                    if (match.winner && match.winner !== match.team1) team1Element.classList.add('loser');
+                    if (match.winner && match.winner !== match.team2) team2Element.classList.add('loser');
+
+                    matchElement.addEventListener('click', () => {
+                        if (!match.winner && match.team1 && match.team2) {
+                            const userInput = prompt(`Who won? Enter "1" for ${match.team1}, "2" for ${match.team2}`);
+                            if (userInput === "1" || userInput === "2") {
+                                const winner = userInput === "1" ? match.team1 : match.team2;
+                                selectWinner(roundIndex, matchIndex, winner);
+                            }
+                        }
+                    });
+
+                    matchElement.appendChild(team1Element);
+                    matchElement.appendChild(team2Element);
+                    roundElement.appendChild(matchElement);
+                });
+                bracketElement.appendChild(roundElement);
+            });
+        }
+
+        function selectWinner(roundIndex, matchIndex, winner) {
+            brackets[roundIndex][matchIndex].winner = winner;
+            if (roundIndex < brackets.length - 1) {
+                const nextMatch = Math.floor(matchIndex / 2);
+                if (matchIndex % 2 === 0) {
+                    brackets[roundIndex + 1][nextMatch].team1 = winner;
+                } else {
+                    brackets[roundIndex + 1][nextMatch].team2 = winner;
+                }
+            } else {
+                const championDisplay = document.getElementById('championDisplay');
+                championDisplay.textContent = `Tournament Champion: ${winner}!`;
+                championDisplay.style.display = 'block';
+            }
+            renderBracket();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
 </body>
 </html>
