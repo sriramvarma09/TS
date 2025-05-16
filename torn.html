@@ -1,3 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tournament Bracket Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .setup-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    input[type="number"], input[type="text"] {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      flex-grow: 1;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .team-input {
+      margin-bottom: 5px;
+    }
+    .team-input input {
+      width: 100%;
+      margin-top: 5px;
+    }
+    #tournamentBracket {
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
+    .round {
+      display: flex;
+      flex-direction: column;
+      margin-right: 40px;
+    }
+    .round-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .match {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+      background-color: white;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      width: 220px;
+    }
+    .team {
+      padding: 10px;
+      background-color: white;
+      border: 1px solid #ddd;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+    .winner {
+      background-color: #e8f5e9;
+      border-color: #4CAF50;
+      font-weight: bold;
+    }
+    .loser {
+      background-color: #ffebee;
+      border-color: #ffcdd2;
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+    select {
+      padding: 6px;
+      margin-top: 5px;
+    }
+    #championDisplay {
+      background-color: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #4CAF50;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      display: none;
+    }
+    #errorMessage {
+      color: #d32f2f;
+      margin: 10px 0;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tournament Bracket Generator</h1>
+
+  <div class="setup-container">
+    <div class="input-group">
+      <label for="numTeams">Number of Teams:</label>
+      <input type="number" id="numTeams" min="2" max="64" value="8" />
+      <button id="generateButton">Generate Team Inputs</button>
+    </div>
+
+    <div id="errorMessage"></div>
+
+    <div id="teamsList"></div>
+
+    <div class="input-group">
+      <button id="startTournamentButton" disabled>Start Tournament</button>
+    </div>
+  </div>
+
+  <div class="bracket-container">
+    <div id="tournamentBracket"></div>
+    <div id="championDisplay"></div>
+  </div>
+
+  <script>
+    let teams = [];
+    let brackets = [];
+    let roundsRequired = 0;
+
+    document.getElementById("generateButton").addEventListener("click", function () {
+      const numTeams = parseInt(document.getElementById("numTeams").value);
+      const errorMessage = document.getElementById("errorMessage");
+
+      if (isNaN(numTeams) || numTeams < 2) {
+        errorMessage.textContent = "Please enter a valid number of teams (minimum 2)";
+        errorMessage.style.display = "block";
+        return;
+      } else if (numTeams > 64) {
+        errorMessage.textContent = "Maximum 64 teams allowed";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      errorMessage.style.display = "none";
+      generateTeamInputs(numTeams);
+    });
+
+    function generateTeamInputs(num) {
+      const teamsListElement = document.getElementById("teamsList");
+      teamsListElement.innerHTML = "<h3>Enter Team Names:</h3>";
+      teams = [];
+
+      for (let i = 0; i < num; i++) {
+        const div = document.createElement("div");
+        div.className = "team-input";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = `Team ${i + 1}`;
+        input.required = true;
+
+        div.appendChild(input);
+        teamsListElement.appendChild(div);
+      }
+
+      document.getElementById("startTournamentButton").disabled = false;
+    }
+
+    document.getElementById("startTournamentButton").addEventListener("click", function () {
+      const inputs = document.querySelectorAll("#teamsList input");
+      teams = Array.from(inputs).map(input => input.value.trim()).filter(Boolean);
+
+      if (teams.length !== inputs.length) {
+        alert("Please fill in all team names.");
+        return;
+      }
+
+      shuffleArray(teams);
+      roundsRequired = Math.ceil(Math.log2(teams.length));
+      generateBracket();
+    });
+
+    function generateBracket() {
+      const bracketElement = document.getElementById("tournamentBracket");
+      bracketElement.innerHTML = "";
+      brackets = [];
+
+      const perfectSize = Math.pow(2, roundsRequired);
+      const numByes = perfectSize - teams.length;
+
+      let firstRoundMatches = [];
+
+      if (numByes === 0) {
+        for (let i = 0; i < teams.length; i += 2) {
+          firstRoundMatches.push({ team1: teams[i], team2: teams[i + 1], winner: null });
+        }
+      } else {
+        let advanced = teams.slice(0, numByes);
+        let playing = teams.slice(numByes);
+        for (let i = 0; i < playing.length; i += 2) {
+          firstRoundMatches.push({ team1: playing[i], team2: playing[i + 1], winner: null });
+        }
+
+        let secondRoundMatches = [];
+        for (let i = 0; i < advanced.length; i += 2) {
+          secondRoundMatches.push({ team1: advanced[i], team2: advanced[i + 1] || null, winner: null });
+        }
+
+        for (let i = 0; i < firstRoundMatches.length / 2; i++) {
+          secondRoundMatches.push({ team1: null, team2: null, winner: null });
+        }
+
+        brackets.push(secondRoundMatches);
+      }
+
+      brackets.unshift(firstRoundMatches);
+
+      for (let i = 1; i < roundsRequired; i++) {
+        if (!brackets[i]) {
+          let prev = brackets[i - 1].length;
+          let roundMatches = [];
+          for (let j = 0; j < prev / 2; j++) {
+            roundMatches.push({ team1: null, team2: null, winner: null });
+          }
+          brackets.push(roundMatches);
+        }
+      }
+
+      renderBracket();
+    }
+
+    function renderBracket() {
+      const bracketElement = document.getElementById("tournamentBracket");
+      bracketElement.innerHTML = "";
+
+      brackets.forEach((round, roundIndex) => {
+        const roundElement = document.createElement("div");
+        roundElement.className = "round";
+
+        const roundTitle = document.createElement("div");
+        roundTitle.className = "round-title";
+        roundTitle.textContent = roundIndex === 0 ? "First Round" : (roundIndex === brackets.length - 1 ? "Final" : `Round ${roundIndex + 1}`);
+        roundElement.appendChild(roundTitle);
+
+        round.forEach((match, matchIndex) => {
           const matchElement = document.createElement("div");
           matchElement.className = "match";
 
@@ -58,7 +325,6 @@
       const nextRoundIndex = currentRoundIndex + 1;
 
       if (nextRoundIndex >= brackets.length) {
-        // Show champion
         const championDisplay = document.getElementById("championDisplay");
         championDisplay.textContent = `🏆 Champion: ${winner} 🏆`;
         championDisplay.style.display = "block";
@@ -74,7 +340,6 @@
         nextMatch.team2 = winner;
       }
 
-      // Clear future rounds in case of re-selection
       for (let i = nextRoundIndex; i < brackets.length; i++) {
         brackets[i].forEach(match => {
           match.winner = null;
