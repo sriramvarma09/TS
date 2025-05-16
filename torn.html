@@ -1,343 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournament Bracket Generator</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .setup-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-        input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            flex-grow: 1;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        #teamsList {
-            margin-top: 20px;
-        }
-        .team-item {
-            background-color: #f9f9f9;
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        #tournamentBracket {
-            display: flex;
-            overflow-x: auto;
-            padding-bottom: 20px;
-        }
-        .round {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            margin-right: 40px;
-        }
-        .round-title {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .match {
-            display: flex;
-            flex-direction: column;
-            margin: 10px 0;
-            width: 220px;
-            background-color: #fff;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-        }
-        .team {
-            padding: 10px;
-            background-color: white;
-            border: 1px solid #ddd;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-        .winner {
-            background-color: #e8f5e9;
-            border-color: #4CAF50;
-            font-weight: bold;
-        }
-        .loser {
-            background-color: #ffebee;
-            border-color: #ffcdd2;
-            text-decoration: line-through;
-            opacity: 0.7;
-        }
-        select {
-            padding: 6px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            margin-top: 5px;
-        }
-        #championDisplay {
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #4CAF50;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            display: none;
-        }
-        #errorMessage {
-            color: #d32f2f;
-            margin: 10px 0;
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <h1>Tournament Bracket Generator</h1>
+          const matchElement = document.createElement("div");
+          matchElement.className = "match";
 
-    <div class="setup-container">
-        <div class="input-group">
-            <label for="numTeams">Number of Teams:</label>
-            <input type="number" id="numTeams" min="2" max="64" value="8">
-            <button id="generateButton">Generate Teams</button>
-        </div>
+          const team1El = document.createElement("div");
+          team1El.className = "team";
+          team1El.textContent = match.team1 || "TBD";
 
-        <div id="errorMessage"></div>
+          const team2El = document.createElement("div");
+          team2El.className = "team";
+          team2El.textContent = match.team2 || "TBD";
 
-        <div id="teamsList"></div>
-
-        <div class="input-group">
-            <button id="startTournamentButton" disabled>Start Tournament</button>
-        </div>
-    </div>
-
-    <div class="bracket-container">
-        <div id="tournamentBracket"></div>
-        <div id="championDisplay"></div>
-    </div>
-
-    <script>
-        let teams = [];
-        let brackets = [];
-        let roundsRequired = 0;
-
-        document.getElementById('generateButton').addEventListener('click', function () {
-            const numTeams = parseInt(document.getElementById('numTeams').value);
-            const errorMessage = document.getElementById('errorMessage');
-
-            if (isNaN(numTeams) || numTeams < 2) {
-                errorMessage.textContent = "Please enter a valid number of teams (minimum 2)";
-                errorMessage.style.display = "block";
-                return;
-            } else if (numTeams > 64) {
-                errorMessage.textContent = "Maximum 64 teams allowed";
-                errorMessage.style.display = "block";
-                return;
+          if (match.winner) {
+            if (match.winner === match.team1) {
+              team1El.classList.add("winner");
+              team2El.classList.add("loser");
+            } else {
+              team2El.classList.add("winner");
+              team1El.classList.add("loser");
             }
+          } else if (match.team1 && match.team2) {
+            const select = document.createElement("select");
+            const optionDefault = document.createElement("option");
+            optionDefault.textContent = "-- Select Winner --";
+            optionDefault.disabled = true;
+            optionDefault.selected = true;
 
-            errorMessage.style.display = "none";
-            teams = [];
-            for (let i = 1; i <= numTeams; i++) {
-                teams.push(`Team ${i}`);
-            }
+            const option1 = document.createElement("option");
+            option1.value = match.team1;
+            option1.textContent = match.team1;
 
-            displayTeams();
-            document.getElementById('startTournamentButton').disabled = false;
-        });
+            const option2 = document.createElement("option");
+            option2.value = match.team2;
+            option2.textContent = match.team2;
 
-        function displayTeams() {
-            const teamsListElement = document.getElementById('teamsList');
-            teamsListElement.innerHTML = '<h3>Teams:</h3>';
+            select.appendChild(optionDefault);
+            select.appendChild(option1);
+            select.appendChild(option2);
 
-            const list = document.createElement('div');
-            teams.forEach(team => {
-                const item = document.createElement('div');
-                item.className = 'team-item';
-                item.textContent = team;
-                list.appendChild(item);
+            select.addEventListener("change", function () {
+              match.winner = this.value;
+              updateNextRound(roundIndex, matchIndex, match.winner);
+              renderBracket();
             });
 
-            teamsListElement.appendChild(list);
-        }
+            matchElement.appendChild(select);
+          }
 
-        document.getElementById('startTournamentButton').addEventListener('click', function () {
-            shuffleArray(teams);
-            roundsRequired = Math.ceil(Math.log2(teams.length));
-            generateBracket();
+          matchElement.appendChild(team1El);
+          matchElement.appendChild(team2El);
+          roundElement.appendChild(matchElement);
         });
 
-        function generateBracket() {
-            const bracketElement = document.getElementById('tournamentBracket');
-            bracketElement.innerHTML = '';
-            brackets = [];
+        bracketElement.appendChild(roundElement);
+      });
+    }
 
-            const perfectBracketSize = Math.pow(2, roundsRequired);
-            const numByes = perfectBracketSize - teams.length;
-            let firstRoundMatches = [];
+    function updateNextRound(currentRoundIndex, matchIndex, winner) {
+      const nextRoundIndex = currentRoundIndex + 1;
 
-            if (numByes === 0) {
-                for (let i = 0; i < teams.length; i += 2) {
-                    firstRoundMatches.push({ team1: teams[i], team2: teams[i + 1], winner: null });
-                }
-            } else {
-                let advanced = teams.slice(0, numByes);
-                let playing = teams.slice(numByes);
-                for (let i = 0; i < playing.length; i += 2) {
-                    firstRoundMatches.push({ team1: playing[i], team2: playing[i + 1], winner: null });
-                }
-                let secondRoundMatches = [];
-                for (let i = 0; i < advanced.length; i += 2) {
-                    secondRoundMatches.push({ team1: advanced[i], team2: advanced[i + 1] || null, winner: null });
-                }
-                for (let i = 0; i < firstRoundMatches.length / 2; i++) {
-                    secondRoundMatches.push({ team1: null, team2: null, winner: null });
-                }
-                brackets.push(secondRoundMatches);
-            }
-            brackets.unshift(firstRoundMatches);
+      if (nextRoundIndex >= brackets.length) {
+        // Show champion
+        const championDisplay = document.getElementById("championDisplay");
+        championDisplay.textContent = `🏆 Champion: ${winner} 🏆`;
+        championDisplay.style.display = "block";
+        return;
+      }
 
-            for (let i = 1; i < roundsRequired; i++) {
-                if (!brackets[i]) {
-                    let prev = brackets[i - 1].length;
-                    let roundMatches = [];
-                    for (let j = 0; j < prev / 2; j++) {
-                        roundMatches.push({ team1: null, team2: null, winner: null });
-                    }
-                    brackets.push(roundMatches);
-                }
-            }
-            renderBracket();
-        }
+      const nextMatchIndex = Math.floor(matchIndex / 2);
+      const nextMatch = brackets[nextRoundIndex][nextMatchIndex];
 
-        function renderBracket() {
-            const bracketElement = document.getElementById('tournamentBracket');
-            bracketElement.innerHTML = '';
+      if (matchIndex % 2 === 0) {
+        nextMatch.team1 = winner;
+      } else {
+        nextMatch.team2 = winner;
+      }
 
-            brackets.forEach((round, roundIndex) => {
-                const roundElement = document.createElement('div');
-                roundElement.className = 'round';
+      // Clear future rounds in case of re-selection
+      for (let i = nextRoundIndex; i < brackets.length; i++) {
+        brackets[i].forEach(match => {
+          match.winner = null;
+        });
+      }
 
-                const roundTitle = document.createElement('div');
-                roundTitle.className = 'round-title';
-                roundTitle.textContent = roundIndex === 0 ? 'First Round' : (roundIndex === brackets.length - 1 ? 'Final' : `Round ${roundIndex + 1}`);
-                roundElement.appendChild(roundTitle);
+      const championDisplay = document.getElementById("championDisplay");
+      championDisplay.style.display = "none";
+    }
 
-                round.forEach((match, matchIndex) => {
-                    const matchElement = document.createElement('div');
-                    matchElement.className = 'match';
-
-                    const team1Element = document.createElement('div');
-                    team1Element.className = 'team';
-                    team1Element.textContent = match.team1 || 'TBD';
-
-                    const team2Element = document.createElement('div');
-                    team2Element.className = 'team';
-                    team2Element.textContent = match.team2 || 'TBD';
-
-                    if (match.winner === match.team1) team1Element.classList.add('winner');
-                    if (match.winner === match.team2) team2Element.classList.add('winner');
-                    if (match.winner && match.winner !== match.team1) team1Element.classList.add('loser');
-                    if (match.winner && match.winner !== match.team2) team2Element.classList.add('loser');
-
-                    matchElement.appendChild(team1Element);
-                    matchElement.appendChild(team2Element);
-
-                    if (match.team1 && match.team2 && !match.winner) {
-                        const select = document.createElement('select');
-                        const defaultOption = document.createElement('option');
-                        defaultOption.text = 'Select Winner';
-                        defaultOption.disabled = true;
-                        defaultOption.selected = true;
-                        select.appendChild(defaultOption);
-
-                        const option1 = document.createElement('option');
-                        option1.value = '1';
-                        option1.text = match.team1;
-
-                        const option2 = document.createElement('option');
-                        option2.value = '2';
-                        option2.text = match.team2;
-
-                        select.appendChild(option1);
-                        select.appendChild(option2);
-
-                        select.addEventListener('change', () => {
-                            const winner = select.value === '1' ? match.team1 : match.team2;
-                            selectWinner(roundIndex, matchIndex, winner);
-                        });
-
-                        matchElement.appendChild(select);
-                    }
-
-                    roundElement.appendChild(matchElement);
-                });
-
-                bracketElement.appendChild(roundElement);
-            });
-        }
-
-        function selectWinner(roundIndex, matchIndex, winner) {
-            brackets[roundIndex][matchIndex].winner = winner;
-            if (roundIndex < brackets.length - 1) {
-                const nextMatch = Math.floor(matchIndex / 2);
-                if (matchIndex % 2 === 0) {
-                    brackets[roundIndex + 1][nextMatch].team1 = winner;
-                } else {
-                    brackets[roundIndex + 1][nextMatch].team2 = winner;
-                }
-            } else {
-                const championDisplay = document.getElementById('championDisplay');
-                championDisplay.textContent = `Tournament Champion: ${winner}!`;
-                championDisplay.style.display = 'block';
-            }
-            renderBracket();
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-    </script>
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+  </script>
 </body>
 </html>
