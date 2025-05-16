@@ -83,14 +83,18 @@
             display: flex;
             flex-direction: column;
             margin: 10px 0;
-            width: 200px;
+            width: 220px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
         }
         .team {
             padding: 10px;
             background-color: white;
             border: 1px solid #ddd;
             text-align: center;
-            cursor: pointer;
+            margin-bottom: 5px;
         }
         .winner {
             background-color: #e8f5e9;
@@ -102,6 +106,12 @@
             border-color: #ffcdd2;
             text-decoration: line-through;
             opacity: 0.7;
+        }
+        select {
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
         }
         #championDisplay {
             background-color: #e8f5e9;
@@ -268,20 +278,39 @@
                     if (match.winner && match.winner !== match.team1) team1Element.classList.add('loser');
                     if (match.winner && match.winner !== match.team2) team2Element.classList.add('loser');
 
-                    matchElement.addEventListener('click', () => {
-                        if (!match.winner && match.team1 && match.team2) {
-                            const userInput = prompt(`Who won? Enter "1" for ${match.team1}, "2" for ${match.team2}`);
-                            if (userInput === "1" || userInput === "2") {
-                                const winner = userInput === "1" ? match.team1 : match.team2;
-                                selectWinner(roundIndex, matchIndex, winner);
-                            }
-                        }
-                    });
-
                     matchElement.appendChild(team1Element);
                     matchElement.appendChild(team2Element);
+
+                    if (match.team1 && match.team2 && !match.winner) {
+                        const select = document.createElement('select');
+                        const defaultOption = document.createElement('option');
+                        defaultOption.text = 'Select Winner';
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        select.appendChild(defaultOption);
+
+                        const option1 = document.createElement('option');
+                        option1.value = '1';
+                        option1.text = match.team1;
+
+                        const option2 = document.createElement('option');
+                        option2.value = '2';
+                        option2.text = match.team2;
+
+                        select.appendChild(option1);
+                        select.appendChild(option2);
+
+                        select.addEventListener('change', () => {
+                            const winner = select.value === '1' ? match.team1 : match.team2;
+                            selectWinner(roundIndex, matchIndex, winner);
+                        });
+
+                        matchElement.appendChild(select);
+                    }
+
                     roundElement.appendChild(matchElement);
                 });
+
                 bracketElement.appendChild(roundElement);
             });
         }
